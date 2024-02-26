@@ -98,6 +98,7 @@ class PolybiusGUI(QMainWindow):
         for i, row in enumerate(self.cipher.polybius_table):
             for j, item in enumerate(row):
                 item_widget = QTableWidgetItem(item)
+                item_widget.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                 item_widget.setTextAlignment(Qt.AlignCenter)
                 self.table.setItem(i, j, item_widget)
 
