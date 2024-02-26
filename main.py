@@ -97,7 +97,9 @@ class PolybiusGUI(QMainWindow):
 
         for i, row in enumerate(self.cipher.polybius_table):
             for j, item in enumerate(row):
-                self.table.setItem(i, j, QTableWidgetItem(item))
+                item_widget = QTableWidgetItem(item)
+                item_widget.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(i, j, item_widget)
 
         for i in range(len(self.cipher.polybius_table[0])):
             self.table.setColumnWidth(i, 1)
