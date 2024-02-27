@@ -55,37 +55,38 @@ class PolybiusCipher:
 
 
 class PermutationCipher:
-    def __init__(self):
-        # Ничего не нужно инициализировать для этого простого шифра
-        pass
 
-    def encrypt(self, message):
-        encrypted_message = ""
-        for char in message:
-            if char.isalpha():
-                offset = ord('а') + ord('я') - ord(char.lower())
-                encrypted_message += chr(offset) if char.islower() else chr(offset).upper()
-            else:
-                encrypted_message += char
-        return encrypted_message
+    def mirror(self, text):
+        mirrored_text = text[::-1]  # Обратное написание текста
+        return mirrored_text
 
-    def decrypt(self, encrypted_message):
-        decrypted_message = ""
-        for char in encrypted_message:
-            if char.isalpha():
-                offset = ord(char.lower()) - ord('а') + ord('я')
-                decrypted_message += chr(offset) if char.islower() else chr(offset).upper()
-            else:
-                decrypted_message += char
-        return decrypted_message
+    def split_into_fives(text):
+        chunks = [text[i:i + 5] for i in range(0, len(text), 5)]  # Разбиение на пятерки букв
+        return ' '.join(chunks)
+
+    def encrypt(text):
+        text = ''.join(
+            filter(str.isalpha, text.upper()))  # Удаление всех символов, кроме букв и преобразование в верхний регистр
+        cipher = PermutationCipher()
+        mirrored_text = cipher.mirror(text)
+        encrypted_text = PermutationCipher.split_into_fives(mirrored_text)
+        return encrypted_text
+
+    def unmirror(text):
+        return text[::-1]  # Обратное написание текста
+
+    def decrypt(text):
+        text = text.replace(' ', '')  # Удаление пробелов
+        unmirrored_text = PermutationCipher.unmirror(text)
+        return unmirrored_text
 
 
-class PolybiusGUI(QMainWindow):
+class GUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Криптография")
         self.cipher_polybius = PolybiusCipher()
-        self.cipher_new = PermutationCipher()
+        self.cipher_permutation = PermutationCipher()
         self.initUI()
         self.setWindowIcon(QIcon('icon.png'))
         self.setGeometry(0, 0, 860, 364)
@@ -105,7 +106,40 @@ class PolybiusGUI(QMainWindow):
         tab_widget.addTab(new_cipher_tab, "Новый шифр")
 
         self.setup_polybius_tab(polybius_tab)
-        self.setup_new_cipher_tab(new_cipher_tab)
+        self.setup_permutation_tab(new_cipher_tab)  # Добавлен метод setup_new_cipher_tab
+
+    def setup_permutation_tab(self, new_cipher_tab):
+        layout = QVBoxLayout(new_cipher_tab)
+
+        message_label = QLabel("Введите сообщение:")
+        layout.addWidget(message_label)
+
+        self.message_entry_permutation = QTextEdit()
+        layout.addWidget(self.message_entry_permutation)
+
+        encrypted_label = QLabel("Зашифрованное сообщение:")
+        layout.addWidget(encrypted_label)
+
+        self.encrypted_message_text_permutation = QTextEdit()
+        layout.addWidget(self.encrypted_message_text_permutation)
+
+        encrypt_button = QPushButton("Зашифровать")
+        encrypt_button.clicked.connect(self.encrypt_message_permutation)
+        layout.addWidget(encrypt_button)
+
+        decrypt_button = QPushButton("Расшифровать")
+        decrypt_button.clicked.connect(self.decrypt_message_permutation)
+        layout.addWidget(decrypt_button)
+
+    def encrypt_message_permutation(self):
+        message = self.message_entry_permutation.toPlainText()
+        encrypted_message = PermutationCipher.encrypt(message)
+        self.encrypted_message_text_permutation.setPlainText(encrypted_message)
+
+    def decrypt_message_permutation(self):
+        encrypted_message = self.encrypted_message_text_permutation.toPlainText()
+        decrypted_message = PermutationCipher.decrypt(encrypted_message)
+        self.message_entry_permutation.setPlainText(decrypted_message)
 
     def setup_polybius_tab(self, polybius_tab):
         layout = QHBoxLayout(polybius_tab)
@@ -164,58 +198,6 @@ class PolybiusGUI(QMainWindow):
         decrypt_button.clicked.connect(self.decrypt_message_polybius)
         right_layout.addWidget(decrypt_button)
 
-    def setup_new_cipher_tab(self, new_cipher_tab):
-        layout = QVBoxLayout(new_cipher_tab)
-
-        centering_layout_message = QHBoxLayout()
-        layout.addLayout(centering_layout_message)
-        message_label = QLabel("Введите сообщение:")
-        message_label.setAlignment(Qt.AlignCenter)
-        centering_layout_message.addWidget(message_label)
-
-        self.message_entry_new_cipher = QTextEdit()
-        layout.addWidget(self.message_entry_new_cipher)
-
-        centering_layout_key = QHBoxLayout()
-        layout.addLayout(centering_layout_key)
-        key_label = QLabel("Введите ключ (целое число):")
-        key_label.setAlignment(Qt.AlignCenter)
-        centering_layout_key.addWidget(key_label)
-
-        self.key_entry_new_cipher = QTextEdit()
-        layout.addWidget(self.key_entry_new_cipher)
-
-        centering_layout_encrypted = QHBoxLayout()
-        layout.addLayout(centering_layout_encrypted)
-        encrypted_label = QLabel("Зашифрованное сообщение:")
-        encrypted_label.setAlignment(Qt.AlignCenter)
-        centering_layout_encrypted.addWidget(encrypted_label)
-
-        self.encrypted_message_text_new_cipher = QTextEdit()
-        layout.addWidget(self.encrypted_message_text_new_cipher)
-
-        encrypt_button = QPushButton("Зашифровать")
-        encrypt_button.clicked.connect(self.encrypt_message_new_cipher)
-        layout.addWidget(encrypt_button)
-
-        decrypt_button = QPushButton("Расшифровать")
-        decrypt_button.clicked.connect(self.decrypt_message_new_cipher)
-        layout.addWidget(decrypt_button)
-
-    def encrypt_message_new_cipher(self):
-        message = self.message_entry_new_cipher.toPlainText()
-        key = int(self.key_entry_new_cipher.toPlainText())
-        # Вызов метода encrypt вашего нового шифра
-        encrypted_message = self.cipher_new.encrypt(message, key)
-        self.encrypted_message_text_new_cipher.setPlainText(encrypted_message)
-
-    def decrypt_message_new_cipher(self):
-        encrypted_message = self.encrypted_message_text_new_cipher.toPlainText()
-        key = int(self.key_entry_new_cipher.toPlainText())
-        # Вызов метода decrypt вашего нового шифра
-        decrypted_message = self.cipher_new.decrypt(encrypted_message, key)
-        self.message_entry_new_cipher.setPlainText(decrypted_message)
-
     def encrypt_message_polybius(self):
         message = self.message_entry_polybius.toPlainText()
         encrypted_message = self.cipher_polybius.polybius_encrypt(message)
@@ -229,7 +211,7 @@ class PolybiusGUI(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    window = PolybiusGUI()
+    window = GUI()
     window.show()
     sys.exit(app.exec_())
 
