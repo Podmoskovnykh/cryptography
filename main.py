@@ -3,6 +3,7 @@ import sys
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, \
     QTableWidget, QTableWidgetItem, QSizePolicy, QApplication, QTabWidget
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 
 
 class PolybiusCipher:
@@ -70,10 +71,11 @@ class NewCipher:
 class PolybiusGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Шифр «Полибианский квадрат» и Новый шифр")
+        self.setWindowTitle("Криптография")
         self.cipher_polybius = PolybiusCipher()
         self.cipher_new = NewCipher()
         self.initUI()
+        self.setWindowIcon(QIcon('icon.png'))
         self.setGeometry(0, 0, 860, 364)
 
     def initUI(self):
