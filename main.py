@@ -103,7 +103,7 @@ class GUI(QMainWindow):
         polybius_tab = QWidget()
         new_cipher_tab = QWidget()
         tab_widget.addTab(polybius_tab, "Полибианский шифр")
-        tab_widget.addTab(new_cipher_tab, "Новый шифр")
+        tab_widget.addTab(new_cipher_tab, "Шифр перестановки")
 
         self.setup_polybius_tab(polybius_tab)
         self.setup_permutation_tab(new_cipher_tab)  # Добавлен метод setup_new_cipher_tab
@@ -115,12 +115,16 @@ class GUI(QMainWindow):
         layout.addWidget(message_label)
 
         self.message_entry_permutation = QTextEdit()
+        self.message_entry_permutation.setFixedWidth(300)
+        self.message_entry_permutation.setFixedHeight(30)
         layout.addWidget(self.message_entry_permutation)
 
         encrypted_label = QLabel("Зашифрованное сообщение:")
         layout.addWidget(encrypted_label)
 
         self.encrypted_message_text_permutation = QTextEdit()
+        self.encrypted_message_text_permutation.setFixedWidth(300)
+        self.encrypted_message_text_permutation.setFixedHeight(30)
         layout.addWidget(self.encrypted_message_text_permutation)
 
         encrypt_button = QPushButton("Зашифровать")
