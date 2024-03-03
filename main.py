@@ -105,7 +105,7 @@ class GUI(QMainWindow):
         tab_widget.addTab(new_cipher_tab, "Шифр перестановки")
 
         self.setup_polybius_tab(polybius_tab)
-        self.setup_permutation_tab(new_cipher_tab)  # Добавлен метод setup_new_cipher_tab
+        self.setup_permutation_tab(new_cipher_tab)
 
     def setup_permutation_tab(self, new_cipher_tab):
         layout = QVBoxLayout(new_cipher_tab)
@@ -135,17 +135,26 @@ class GUI(QMainWindow):
         self.encrypt_button.clicked.connect(self.perform_action)
         layout.addWidget(self.encrypt_button)
 
+        self.encrypt_radio.toggled.connect(self.on_encrypt_toggled)
+        self.decrypt_radio.toggled.connect(self.on_decrypt_toggled)
+
+    def on_encrypt_toggled(self, checked):
+        if checked:
+            self.encrypt_button.setText("Зашифровать")
+
+    def on_decrypt_toggled(self, checked):
+        if checked:
+            self.encrypt_button.setText("Расшифровать")
+
     def perform_action(self):
         if self.encrypt_radio.isChecked():
-            message = self.message_entry.toPlainText()
-            result = PermutationCipher.encrypt(message)
-            self.encrypted_message_text_permutation.setPlainText(result)
+            message = self.message_entry_permutation.toPlainText()
+            result = PermutationCipher().encrypt(message)
+            self.result_text.setPlainText(result)
         elif self.decrypt_radio.isChecked():
-            message = self.message_entry.toPlainText()
-            result = PermutationCipher.decrypt(message)
-            self.encrypted_message_text_permutation.setPlainText(result)
-        else:
-            result = "Выберите действие"
+            message = self.message_entry_permutation.toPlainText()
+            result = PermutationCipher().decrypt(message)
+            self.result_text.setPlainText(result)
 
     def setup_polybius_tab(self, polybius_tab):
         layout = QHBoxLayout(polybius_tab)
@@ -224,3 +233,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
