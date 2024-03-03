@@ -1,7 +1,7 @@
 import random
 import sys
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, \
-    QTableWidget, QTableWidgetItem, QSizePolicy, QApplication, QTabWidget, QRadioButton
+    QTableWidget, QTableWidgetItem, QSizePolicy, QApplication, QTabWidget, QRadioButton, QGridLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
@@ -65,7 +65,8 @@ class PermutationCipher:
         return ' '.join(chunks)
 
     def encrypt(self, text):
-        text = ''.join(filter(str.isalpha, text.upper()))  # Удаление всех символов, кроме букв и преобразование в верхний регистр
+        text = ''.join(
+            filter(str.isalpha, text.upper()))  # Удаление всех символов, кроме букв и преобразование в верхний регистр
         mirrored_text = self.mirror(text)
         encrypted_text = self.split_into_fives(mirrored_text)
         return encrypted_text
@@ -77,7 +78,6 @@ class PermutationCipher:
         text = text.replace(' ', '')  # Удаление пробелов
         unmirrored_text = self.unmirror(text)
         return unmirrored_text
-
 
 
 class GUI(QMainWindow):
@@ -108,35 +108,42 @@ class GUI(QMainWindow):
         self.setup_permutation_tab(new_cipher_tab)
 
     def setup_permutation_tab(self, new_cipher_tab):
-        layout = QVBoxLayout(new_cipher_tab)
+        layout = QGridLayout(new_cipher_tab)
 
-        message_label = QLabel("Введите сообщение:")
-        layout.addWidget(message_label)
+        message_label = QLabel("Открытый текст")
+        message_label.setAlignment(Qt.AlignTop)  # Выравнивание по вертикали вверх
+        layout.addWidget(message_label, 0, 0)
 
         self.message_entry_permutation = QTextEdit()
-        self.message_entry_permutation.setFixedWidth(300)
+        self.message_entry_permutation.setFixedWidth(700)
         self.message_entry_permutation.setFixedHeight(30)
-        layout.addWidget(self.message_entry_permutation)
+        layout.addWidget(self.message_entry_permutation, 0, 1, 1, 2)
 
-        encrypted_label = QLabel("Результат:")
-        layout.addWidget(encrypted_label)
+        result_label = QLabel("Результат")
+        result_label.setAlignment(Qt.AlignTop)  # Выравнивание по вертикали вверх
+        layout.addWidget(result_label, 1, 0)
 
         self.result_text = QTextEdit()
-        self.result_text.setFixedWidth(300)
+        self.result_text.setFixedWidth(700)
         self.result_text.setFixedHeight(30)
-        layout.addWidget(self.result_text)
+        self.result_text.setReadOnly(True)  # Делаем поле только для чтения
+        layout.addWidget(self.result_text, 1, 1, 1, 2)
 
+        buttons_layout = QHBoxLayout()  # Создаем горизонтальный макет для кнопок
         self.encrypt_radio = QRadioButton("Зашифровать")
         self.decrypt_radio = QRadioButton("Расшифровать")
-        layout.addWidget(self.encrypt_radio)
-        layout.addWidget(self.decrypt_radio)
+        buttons_layout.addWidget(self.encrypt_radio)
+        buttons_layout.addWidget(self.decrypt_radio)
 
         self.encrypt_button = QPushButton("Выполнить")
-        self.encrypt_button.clicked.connect(self.perform_action)
-        layout.addWidget(self.encrypt_button)
+        buttons_layout.addWidget(self.encrypt_button)
 
+        layout.addLayout(buttons_layout, 2, 0, 1, 3)  # Добавляем макет с кнопками в основной макет
+
+        # Привязываем слоты к сигналам
         self.encrypt_radio.toggled.connect(self.on_encrypt_toggled)
         self.decrypt_radio.toggled.connect(self.on_decrypt_toggled)
+        self.encrypt_button.clicked.connect(self.perform_action)
 
     def on_encrypt_toggled(self, checked):
         if checked:
@@ -233,4 +240,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
