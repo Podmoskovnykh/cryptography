@@ -57,25 +57,25 @@ class PolybiusCipher:
 class PermutationCipher:
 
     def mirror(self, text):
-        mirrored_text = text[::-1]  # Обратное написание текста
+        mirrored_text = text[::-1]
         return mirrored_text
 
     def split_into_fives(self, text):
-        chunks = [text[i:i + 5] for i in range(0, len(text), 5)]  # Разбиение на пятерки букв
+        chunks = [text[i:i + 5] for i in range(0, len(text), 5)]
         return ' '.join(chunks)
 
     def encrypt(self, text):
         text = ''.join(
-            filter(str.isalpha, text.upper()))  # Удаление всех символов, кроме букв и преобразование в верхний регистр
+            filter(str.isalpha, text.upper()))
         mirrored_text = self.mirror(text)
         encrypted_text = self.split_into_fives(mirrored_text)
         return encrypted_text
 
     def unmirror(self, text):
-        return text[::-1]  # Обратное написание текста
+        return text[::-1]
 
     def decrypt(self, text):
-        text = text.replace(' ', '')  # Удаление пробелов
+        text = text.replace(' ', '')
         unmirrored_text = self.unmirror(text)
         return unmirrored_text
 
@@ -111,7 +111,7 @@ class GUI(QMainWindow):
         layout = QGridLayout(new_cipher_tab)
 
         message_label = QLabel("Открытый текст")
-        message_label.setAlignment(Qt.AlignTop)  # Выравнивание по вертикали вверх
+        message_label.setAlignment(Qt.AlignTop)
         layout.addWidget(message_label, 0, 0)
 
         self.message_entry_permutation = QTextEdit()
@@ -120,25 +120,25 @@ class GUI(QMainWindow):
         layout.addWidget(self.message_entry_permutation, 0, 1, 1, 2)
 
         result_label = QLabel("Результат")
-        result_label.setAlignment(Qt.AlignTop)  # Выравнивание по вертикали вверх
+        result_label.setAlignment(Qt.AlignTop)
         layout.addWidget(result_label, 1, 0)
 
         self.result_text = QTextEdit()
         self.result_text.setFixedWidth(700)
         self.result_text.setFixedHeight(30)
-        self.result_text.setReadOnly(True)  # Делаем поле только для чтения
+        self.result_text.setReadOnly(True)
         layout.addWidget(self.result_text, 1, 1, 1, 2)
 
-        buttons_layout = QHBoxLayout()  # Создаем горизонтальный макет для кнопок
+        buttons_layout = QHBoxLayout()
         self.encrypt_radio = QRadioButton("Зашифровать")
         self.decrypt_radio = QRadioButton("Расшифровать")
         buttons_layout.addWidget(self.encrypt_radio)
         buttons_layout.addWidget(self.decrypt_radio)
 
-        self.encrypt_button = QPushButton("Выполнить")
+        self.encrypt_button = QPushButton("Выберите действие")
         buttons_layout.addWidget(self.encrypt_button)
 
-        layout.addLayout(buttons_layout, 2, 0, 1, 3)  # Добавляем макет с кнопками в основной макет
+        layout.addLayout(buttons_layout, 2, 0, 1, 3)
 
         # Привязываем слоты к сигналам
         self.encrypt_radio.toggled.connect(self.on_encrypt_toggled)
@@ -240,3 +240,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
