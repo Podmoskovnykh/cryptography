@@ -1,7 +1,7 @@
 import random
 import sys
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, \
-    QTableWidget, QTableWidgetItem, QSizePolicy, QApplication, QTabWidget
+    QTableWidget, QTableWidgetItem, QSizePolicy, QApplication, QTabWidget, QRadioButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
@@ -60,25 +60,24 @@ class PermutationCipher:
         mirrored_text = text[::-1]  # Обратное написание текста
         return mirrored_text
 
-    def split_into_fives(text):
+    def split_into_fives(self, text):
         chunks = [text[i:i + 5] for i in range(0, len(text), 5)]  # Разбиение на пятерки букв
         return ' '.join(chunks)
 
-    def encrypt(text):
-        text = ''.join(
-            filter(str.isalpha, text.upper()))  # Удаление всех символов, кроме букв и преобразование в верхний регистр
-        cipher = PermutationCipher()
-        mirrored_text = cipher.mirror(text)
-        encrypted_text = PermutationCipher.split_into_fives(mirrored_text)
+    def encrypt(self, text):
+        text = ''.join(filter(str.isalpha, text.upper()))  # Удаление всех символов, кроме букв и преобразование в верхний регистр
+        mirrored_text = self.mirror(text)
+        encrypted_text = self.split_into_fives(mirrored_text)
         return encrypted_text
 
-    def unmirror(text):
+    def unmirror(self, text):
         return text[::-1]  # Обратное написание текста
 
-    def decrypt(text):
+    def decrypt(self, text):
         text = text.replace(' ', '')  # Удаление пробелов
-        unmirrored_text = PermutationCipher.unmirror(text)
+        unmirrored_text = self.unmirror(text)
         return unmirrored_text
+
 
 
 class GUI(QMainWindow):
@@ -119,31 +118,34 @@ class GUI(QMainWindow):
         self.message_entry_permutation.setFixedHeight(30)
         layout.addWidget(self.message_entry_permutation)
 
-        encrypted_label = QLabel("Зашифрованное сообщение:")
+        encrypted_label = QLabel("Результат:")
         layout.addWidget(encrypted_label)
 
-        self.encrypted_message_text_permutation = QTextEdit()
-        self.encrypted_message_text_permutation.setFixedWidth(300)
-        self.encrypted_message_text_permutation.setFixedHeight(30)
-        layout.addWidget(self.encrypted_message_text_permutation)
+        self.result_text = QTextEdit()
+        self.result_text.setFixedWidth(300)
+        self.result_text.setFixedHeight(30)
+        layout.addWidget(self.result_text)
 
-        encrypt_button = QPushButton("Зашифровать")
-        encrypt_button.clicked.connect(self.encrypt_message_permutation)
-        layout.addWidget(encrypt_button)
+        self.encrypt_radio = QRadioButton("Зашифровать")
+        self.decrypt_radio = QRadioButton("Расшифровать")
+        layout.addWidget(self.encrypt_radio)
+        layout.addWidget(self.decrypt_radio)
 
-        decrypt_button = QPushButton("Расшифровать")
-        decrypt_button.clicked.connect(self.decrypt_message_permutation)
-        layout.addWidget(decrypt_button)
+        self.encrypt_button = QPushButton("Выполнить")
+        self.encrypt_button.clicked.connect(self.perform_action)
+        layout.addWidget(self.encrypt_button)
 
-    def encrypt_message_permutation(self):
-        message = self.message_entry_permutation.toPlainText()
-        encrypted_message = PermutationCipher.encrypt(message)
-        self.encrypted_message_text_permutation.setPlainText(encrypted_message)
-
-    def decrypt_message_permutation(self):
-        encrypted_message = self.encrypted_message_text_permutation.toPlainText()
-        decrypted_message = PermutationCipher.decrypt(encrypted_message)
-        self.message_entry_permutation.setPlainText(decrypted_message)
+    def perform_action(self):
+        if self.encrypt_radio.isChecked():
+            message = self.message_entry.toPlainText()
+            result = PermutationCipher.encrypt(message)
+            self.encrypted_message_text_permutation.setPlainText(result)
+        elif self.decrypt_radio.isChecked():
+            message = self.message_entry.toPlainText()
+            result = PermutationCipher.decrypt(message)
+            self.encrypted_message_text_permutation.setPlainText(result)
+        else:
+            result = "Выберите действие"
 
     def setup_polybius_tab(self, polybius_tab):
         layout = QHBoxLayout(polybius_tab)
