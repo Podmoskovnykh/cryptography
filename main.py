@@ -104,6 +104,12 @@ class GUI(QMainWindow):
         tab_widget.addTab(polybius_tab, "Полибианский шифр")
         tab_widget.addTab(new_cipher_tab, "Шифр перестановки")
 
+        tab_widget.setStyleSheet("""
+                    QTabWidget::pane { background-color: white; border: 2px solid #2196F3; border-radius: 4px; }
+                    QTabBar::tab:selected { background-color: #2196F3; color: white; }
+                    QTabBar::tab:!selected { background-color: #EEEEEE; color: #2196F3; }
+                """)
+
         self.setup_polybius_tab(polybius_tab)
         self.setup_permutation_tab(new_cipher_tab)
 
@@ -138,9 +144,12 @@ class GUI(QMainWindow):
         self.encrypt_button = QPushButton("Выберите действие")
         buttons_layout.addWidget(self.encrypt_button)
 
+        self.encrypt_button.setStyleSheet(
+            "QPushButton { background-color: #2196F3; color: white; border: 2px solid #1976D2; "
+            "border-radius: 5px; padding: 8px; } QPushButton:hover { background-color: #1976D2; }")
+
         layout.addLayout(buttons_layout, 2, 0, 1, 3)
 
-        # Привязываем слоты к сигналам
         self.encrypt_radio.toggled.connect(self.on_encrypt_toggled)
         self.decrypt_radio.toggled.connect(self.on_decrypt_toggled)
         self.encrypt_button.clicked.connect(self.perform_action)
@@ -148,10 +157,16 @@ class GUI(QMainWindow):
     def on_encrypt_toggled(self, checked):
         if checked:
             self.encrypt_button.setText("Зашифровать")
+            self.encrypt_button.setStyleSheet(
+                "QPushButton { background-color: #4CAF50; color: white; border: 2px solid #4CAF50; border-radius: 5px; "
+                "padding: 8px; } QPushButton:hover { background-color: #45a049; }")
 
     def on_decrypt_toggled(self, checked):
         if checked:
             self.encrypt_button.setText("Расшифровать")
+            self.encrypt_button.setStyleSheet(
+                "QPushButton { background-color: #f44336; color: white; border: 2px solid #f44336; border-radius: 5px; "
+                "padding: 8px; } QPushButton:hover { background-color: #d32f2f; }")
 
     def perform_action(self):
         if self.encrypt_radio.isChecked():
@@ -220,6 +235,13 @@ class GUI(QMainWindow):
         decrypt_button.clicked.connect(self.decrypt_message_polybius)
         right_layout.addWidget(decrypt_button)
 
+        encrypt_button.setStyleSheet(
+            "QPushButton { background-color: #4CAF50; color: white; border: none; border-radius: 4px; padding: 8px; } "
+            "QPushButton:hover { background-color: #45a049; }")
+        decrypt_button.setStyleSheet(
+            "QPushButton { background-color: #f44336; color: white; border: none; border-radius: 4px; padding: 8px; } "
+            "QPushButton:hover { background-color: #d32f2f; }")
+
     def encrypt_message_polybius(self):
         message = self.message_entry_polybius.toPlainText()
         encrypted_message = self.cipher_polybius.polybius_encrypt(message)
@@ -240,4 +262,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
