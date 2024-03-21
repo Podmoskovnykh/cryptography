@@ -1,5 +1,6 @@
 import random
 import sys
+import binascii
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, \
     QTableWidget, QTableWidgetItem, QSizePolicy, QApplication, QTabWidget, QRadioButton, QGridLayout
 from PyQt5.QtCore import Qt
@@ -80,12 +81,175 @@ class PermutationCipher:
         return unmirrored_text
 
 
+class MagmaCipher:
+    def __init__(self):
+        pass
+
+    # turn text from hex to utf8
+    def hexToUtf8(self, text):
+        text = binascii.unhexlify(text).decode('utf8')
+        return text
+
+    # turn text from utf8 to hex
+    def utf8ToHex(self, text):
+        text = binascii.hexlify(text.encode('utf8')).decode('utf8')
+        return text
+
+    # xor function
+    def xor(self, num1, num2, in_code=2):
+        len1 = len(str(num1))
+        num1 = int(num1, in_code)
+        num2 = int(num2, in_code)
+
+        num = str(bin(num1 ^ num2)[2:])
+
+        num = self.fillZerosBeforeNumber(num, len1)
+
+        return num
+
+    # filling zeros before number
+    def fillZerosBeforeNumber(self, num1, length):
+        num1 = str(num1)
+        if len(str(num1)) != length:
+            for i in range(length - len(str(num1))):
+                num1 = '0' + num1
+        return num1
+
+    # filling zeros after number
+    def fillZerosAfterNumber(self, num1, length):
+        num1 = str(num1)
+        if len(str(num1)) != length:
+            for i in range(length - len(str(num1))):
+                num1 = num1 + '0'
+        return num1
+
+    transformation_table = [
+        [11, 7, 8, 15, 1, 13, 12, 6, 0, 5, 10, 9, 4, 3, 2, 14],
+        [13, 12, 0, 1, 2, 9, 8, 15, 7, 10, 11, 14, 4, 5, 3, 6],
+        [7, 5, 13, 6, 10, 14, 0, 1, 9, 2, 15, 8, 3, 4, 12, 11],
+        [10, 9, 0, 4, 13, 2, 7, 15, 14, 1, 6, 11, 5, 12, 8, 3],
+        [13, 1, 0, 4, 14, 6, 10, 15, 8, 3, 12, 7, 9, 11, 5, 2],
+        [9, 4, 14, 2, 7, 13, 1, 8, 5, 15, 0, 11, 12, 6, 10, 3],
+        [15, 6, 14, 13, 8, 10, 2, 0, 9, 12, 1, 7, 5, 11, 3, 4],
+        [10, 6, 4, 2, 12, 13, 5, 15, 8, 14, 3, 7, 11, 0, 9, 1]
+    ]
+
+    # conversion in Easy Overwrite Mode
+    def overwriteMode(self, bitNumberIn):
+        bitNumberInOut = ''
+        for i in range(8):
+            num1 = bitNumberIn[i * 4: i * 4 + 4]
+            num2 = bin(self.transformation_table[i][int(bitNumberIn[i * 4: i * 4 + 4], 2)])[2:]
+            num2 = self.fillZerosBeforeNumber(num2, 4)
+
+            bitNumberInOut += self.xor(num1, num2, 2)
+        return bitNumberInOut
+
+    def transformation(self, numLeft, numRight, key):
+        numLeftOut = numRight
+        numRightOut = self.xor(numRight, key, 2)
+        numRightOut = self.overwriteMode(numRightOut)
+        numRightOut = self.xor(numRightOut, numLeft, 2)
+        return numLeftOut, numRightOut
+
+    def chainOfTransformations(self, numLeft, numRight, key, move='straight'):
+        if move == 'reverse':
+            start = 31
+            stop = 0
+            step = -1
+            last = 0
+        else:
+            start = 0
+            stop = 31
+            step = 1
+            last = 31
+        for i in range(start, stop, step):
+            numLeft, numRight = self.transformation(numLeft, numRight, key[i])
+        numRightLast = numRight
+        numLeft, numRight = self.transformation(numLeft, numRight, key[last])
+        return numRight + numRightLast
+
+    # convertation from base to base
+    def convertBase(self, num, toBase=10, fromBase=10):
+        # converting to a decimal number
+        if isinstance(num, str):
+            n = int(num, fromBase)
+        else:
+            n = int(num)
+        # converting a decimal number to the required number system
+        alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        if n < toBase:
+            return alphabet[n]
+        else:
+            return self.convertBase(n // toBase, toBase) + alphabet[n % toBase]
+
+    # set key with right length
+    def transformKey(self, key):
+        key = binascii.hexlify(key.encode('utf8')).decode('utf8')
+        count = 64 - len(key) % 64
+        while len(key) < 64:
+            key += key
+        return key[:64]
+
+    def cutKey(self, key):
+        key = self.convertBase(key, 2, 16)
+        keys = []
+        for i in range(3):
+            for j in range(8):
+                keys.append(key[j * 32: j * 32 + 32])
+        for i in range(7, -1, -1):
+            keys.append(key[i * 32: i * 32 + 32])
+        return keys
+
+    # encrypt from UTF8 text to HEX text with key
+    def encrypt(self, text, key):
+        key = self.transformKey(key)
+        key = self.cutKey(key)
+        text = self.convertBase(self.utf8ToHex(text), toBase=2, fromBase=16)
+        if len(text) % 8 != 0:
+            text = self.fillZerosBeforeNumber(text, (len(text) // 8) * 8 + 8)
+        textArray = []
+        textEncrypt = ''
+        for i in range(len(text) // 64 + 1):
+            textForAppend = text[i * 64: i * 64 + 64]
+            textForAppend = self.fillZerosAfterNumber(textForAppend, 64)
+            textArray.append(textForAppend)
+        for i in range(len(textArray)):
+            textEncrypt += self.chainOfTransformations(textArray[i][:32], textArray[i][32:], key)
+        textEncrypt = self.convertBase(textEncrypt, toBase=16, fromBase=2)
+        return textEncrypt
+
+    # decrypt from HEX text to HEX text with key
+    def decrypt(self, text, key):
+        key = self.transformKey(key)
+        key = self.cutKey(key)
+        text = self.convertBase(text, toBase=2, fromBase=16)
+        if len(text) % 8 != 0:
+            text = self.fillZerosBeforeNumber(text, (len(text) // 8) * 8 + 8)
+        textArray = []
+        textDecrypt = ''
+        if (len(text) // 64 * 64) != len(text):
+            count = len(text) // 64 + 1
+        else:
+            count = len(text) // 64
+        for i in range(count):
+            textForAppend = text[i * 64: i * 64 + 64]
+            textForAppend = self.fillZerosAfterNumber(textForAppend, 64)
+            textArray.append(textForAppend)
+        for i in range(len(textArray)):
+            textDecrypt += self.chainOfTransformations(textArray[i][:32], textArray[i][32:], key, move='reverse')
+        textDecrypt = self.convertBase(textDecrypt, toBase=16, fromBase=2)
+        textDecrypt = self.hexToUtf8(textDecrypt)
+        return textDecrypt
+
+
 class GUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Криптография")
         self.cipher_polybius = PolybiusCipher()
         self.cipher_permutation = PermutationCipher()
+        self.cipher_magma = MagmaCipher()
         self.initUI()
         self.setWindowIcon(QIcon('icon.png'))
         self.setGeometry(0, 0, 860, 364)
@@ -101,8 +265,10 @@ class GUI(QMainWindow):
 
         polybius_tab = QWidget()
         new_cipher_tab = QWidget()
+        magma_tab = QWidget()
         tab_widget.addTab(polybius_tab, "Полибианский шифр")
         tab_widget.addTab(new_cipher_tab, "Шифр перестановки")
+        tab_widget.addTab(magma_tab, "Магма")
 
         tab_widget.setStyleSheet("""
                     QTabWidget::pane { background-color: white; border: 2px solid #2196F3; border-radius: 4px; }
@@ -112,11 +278,12 @@ class GUI(QMainWindow):
 
         self.setup_polybius_tab(polybius_tab)
         self.setup_permutation_tab(new_cipher_tab)
+        self.setup_magma_tab(magma_tab)
 
     def setup_permutation_tab(self, new_cipher_tab):
         layout = QGridLayout(new_cipher_tab)
 
-        message_label = QLabel("Открытый текст")
+        message_label = QLabel("Введите текст: ")
         message_label.setAlignment(Qt.AlignTop)
         layout.addWidget(message_label, 0, 0)
 
@@ -125,7 +292,7 @@ class GUI(QMainWindow):
         self.message_entry_permutation.setFixedHeight(30)
         layout.addWidget(self.message_entry_permutation, 0, 1, 1, 2)
 
-        result_label = QLabel("Результат")
+        result_label = QLabel("Результат: ")
         result_label.setAlignment(Qt.AlignTop)
         layout.addWidget(result_label, 1, 0)
 
@@ -251,6 +418,56 @@ class GUI(QMainWindow):
         encrypted_message = self.encrypted_message_text_polybius.toPlainText()
         decrypted_message = self.cipher_polybius.polybius_decrypt(encrypted_message)
         self.message_entry_polybius.setPlainText(decrypted_message)
+
+    def setup_magma_tab(self, magma_tab):
+        layout = QGridLayout(magma_tab)
+
+        message_label = QLabel("Введите текст: ")
+        layout.addWidget(message_label, 0, 0)
+
+        self.message_entry_magma = QTextEdit()
+        self.message_entry_magma.setFixedWidth(700)
+        self.message_entry_magma.setFixedHeight(30)
+        layout.addWidget(self.message_entry_magma, 0, 1)
+
+        key_label = QLabel("Введите ключ: ")
+        layout.addWidget(key_label, 1, 0)
+
+        self.key_entry_magma = QTextEdit()
+        self.key_entry_magma.setFixedWidth(700)
+        self.key_entry_magma.setFixedHeight(30)
+        layout.addWidget(self.key_entry_magma, 1, 1)
+
+        encrypt_button = QPushButton("Зашифровать")
+        encrypt_button.clicked.connect(self.encrypt_message_magma)
+        layout.addWidget(encrypt_button, 2, 0, 1, 2)
+
+        decrypt_button = QPushButton("Расшифровать")
+        decrypt_button.clicked.connect(self.decrypt_message_magma)
+        layout.addWidget(decrypt_button, 3, 0, 1, 2)
+
+        encrypt_button.setStyleSheet(
+            "QPushButton { background-color: #4CAF50; color: white; border: none; border-radius: 4px; padding: 8px; } "
+            "QPushButton:hover { background-color: #45a049; }")
+        decrypt_button.setStyleSheet(
+            "QPushButton { background-color: #f44336; color: white; border: none; border-radius: 4px; padding: 8px; } "
+            "QPushButton:hover { background-color: #d32f2f; }")
+
+        self.result_text_magma = QTextEdit()
+        self.result_text_magma.setReadOnly(True)
+        layout.addWidget(self.result_text_magma, 4, 0, 1, 2)
+
+    def encrypt_message_magma(self):
+        message = self.message_entry_magma.toPlainText()
+        key = self.key_entry_magma.toPlainText()
+        encrypted_message = self.cipher_magma.encrypt(message, key)
+        self.result_text_magma.setPlainText(encrypted_message)
+
+    def decrypt_message_magma(self):
+        message = self.message_entry_magma.toPlainText()
+        key = self.key_entry_magma.toPlainText()
+        decrypted_message = self.cipher_magma.decrypt(message, key)
+        self.result_text_magma.setPlainText(decrypted_message)
 
 
 def main():
